@@ -1,0 +1,132 @@
+Sub new_columns()
+    Dim ws As Worksheet
+    For Each ws In Worksheets
+        'To hold ticker symbol
+        Dim ticker_symbol As String
+        
+        'Initialize variables/objects to calculate for and utilize
+        Dim yearly_price_open() As Variant
+        Dim yearly_price_close() As Variant
+        
+        Dim yearly_change As Double
+        yearly_change = 0
+        Dim percent_change As Double
+        percent_change = 0
+        Dim total_stock_volume As Double
+        total_stock_volume = 0
+        
+        'iteration counters
+        Dim it_count_o As Integer
+        Dim it_count As Integer
+        it_count_o = 2
+        it_count = 2
+        
+        'To keep track of each stock ticker
+        Dim row_counter As Integer
+        row_counter = 2
+        
+        'Last row indicator variables
+        last_row = Cells(Rows.Count, 1).End(xlUp).Row
+        last_row_yc = Cells(Rows.Count, 12).End(xlUp).Row
+        last_row_metric = Cells(Rows.Count, 12).End(xlUp).Row
+        
+        'Create metric comparison table labels
+        Range("J1").Value = "Ticker"
+        Range("K1").Value = "Yearly Change"
+        Range("L1").Value = "Percent Change"
+        Range("M1").Value = "Total stock volume"
+        
+        Range("P2").Value = "Greatest % Increase"
+        Range("P3").Value = "Greatest % Decrease"
+        Range("P4").Value = "Greatest Total Volume"
+        Range("Q1").Value = "Ticker"
+        Range("R1").Value = "Value"
+        
+        'main script
+        For i = 2 To last_row
+            If Cells(i + 1, 1).Value <> Cells(i, 1).Value Then
+                ' To create ticker symbols
+                ticker_symbol = Cells(i, 1).Value
+                Range("J" & row_counter) = ticker_symbol
+                
+                'Test
+                'Range("M2").Value = it_count_0
+                'Range("N2").Value = it_count
+                
+                'To fill in your array values for both open and close values
+                yearly_price_open = Range("C" & it_count_o & ":C" & it_count).Value
+                yearly_price_close = Range("F" & it_count_o & ":F" & it_count).Value
+                pc_index = UBound(yearly_price_close)
+                po_index = LBound(yearly_price_open)
+                
+                'Perform calculation
+                'To check the size of each range within the array bounds: yearly_change = UBound(yearly_change_close) - LBound(yearly_change_open)
+                yearly_change = yearly_price_close(pc_index, 1) - yearly_price_open(po_index, 1)
+                Range("K" & row_counter) = yearly_change
+                
+                'Calculate percentage change
+                percent_change = (yearly_price_close(pc_index, 1) / yearly_price_open(po_index, 1)) - 1
+                Range("L" & row_counter) = percent_change
+                
+                'Calculate total stock volume
+                total_stock_volume = total_stock_volume + Cells(i, 7).Value
+                Range("M" & row_counter) = total_stock_volume
+                
+                'Find maximum's for each ticker calculation
+                For j = 2 To last_row_metric
+                    'Greatest % Increase
+                    If Range("L" & j).Value > Range("R2").Value Then
+                        Range("Q2").Value = Range("J" & j).Value
+                        Range("R2").Value = Range("L" & j).Value
+                    'Greatest % Decrease
+                    ElseIf Range("L" & j).Value < Range("R3").Value Then
+                        Range("Q3").Value = Range("J" & j).Value
+                        Range("R3").Value = Range("L" & j).Value
+                    'Greatest Total Volume
+                    ElseIf Range("M" & j).Value > Range("R4").Value Then
+                        Range("Q4").Value = Range("J" & j).Value
+                        Range("R4").Value = Range("M" & j).Value
+                    Else
+                    End If
+                Next j
+                
+                'reassign variable iterators
+                row_counter = row_counter + 1
+                it_count_o = it_count + 1
+                it_count = it_count + 1
+                total_stock_volume = 0
+            Else
+            'assign variable iterator for open/close price index to call from array later
+            'concurrently sum stock volume for each ticker symbol
+                total_stock_volume = total_stock_volume + Cells(i, 7).Value
+                it_count = it_count + 1
+                
+            End If
+        Next i
+        
+        'Format entries as necessary
+        'Percent change
+        Range("L:L").NumberFormat = "0.00%"
+        'Greatest % Increase/Decrease
+        Range("R2,R3").NumberFormat = "0.00%"
+        
+        'Conditional formatting for yearly change
+        For i = 2 To last_row_yc
+            If Range("K" & i).Value < 0 Then
+                Range("K" & i).Interior.ColorIndex = 3
+            ElseIf Range("K" & i).Value > 0 Then
+                Range("K" & i).Interior.ColorIndex = 4
+            Else
+            End If
+            
+        Next i
+        ws.Activate
+        Debug.Print ws.Name
+    Next ws
+    'References:
+    'https://stackoverflow.com/questions/59123467/vba-unique-values
+    'https://www.homeandlearn.org/arrays_and_loops.html
+    'https://www.youtube.com/watch?v=3OfVIsKy59c
+
+End Sub
+
